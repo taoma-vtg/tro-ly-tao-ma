@@ -52,39 +52,43 @@
         const apiKey = localStorage.getItem('googleApiKey_mobile'); if (!apiKey) {addMessage('Lỗi: Không tìm thấy API Key.', 'ai'); return;}
         addMessage('Bước 3/3: AI đang phân tích và tra cứu...', 'ai');
         
-        // --- PROMPT MỚI, SIÊU CHI TIẾT ---
-        const  const prompt = `
-            You are a highly intelligent technical assistant. Your task is to extract product information from a given text and enrich it with your knowledge base. Return a single, clean JSON object.
+              // --- NEW PROMPT V23 - ZERO TOLERANCE FOR REDUNDANCY ---
+        const prompt = `
+            You are a data extraction bot. Your ONLY job is to populate a JSON object based on the rules below.
 
-            **Chain of Thought Process:**
-            1.  **Extract Primary Info:** Read the user's text to identify the "name_vi" (Vietnamese product type), "model" (the most specific model number), and "maker".
-            2.  **Extract Specs from Text:** Find all technical specifications directly mentioned in the user's text.
-            3.  **Knowledge Lookup & Enrichment (CRITICAL STEP):**
-                - Use the identified "model" and "maker" to search your internal knowledge base (trained on the internet).
-                - Find additional key technical specifications for this model that are not in the user's text.
-                - *Example: If the model is "ThinkCentre M70t" and the text only mentions the CPU, you should find and add information about RAM, Storage, Ports, etc.*
-            4.  **Compile Final Description:**
-                - Combine the specs from the user's text AND the specs you found from your knowledge lookup.
-                - Create a detailed, comma-separated string for the "desc_vi" field.
-                - **CRITICAL RULES:**
-                    - The description **MUST NOT** contain the model number or maker.
-                    - The description **MUST NOT** contain non-technical info like Serial Number, Date, or Origin.
-                    - The description **MUST NOT** contain sentences like "For full specifications, please refer to...". It must contain the actual specifications.
-            5.  **Translate:** Translate only "name_vi" and "desc_vi" to English.
-            
-            **JSON Schema to return:**
-            - "name_vi": (string) Vietnamese product name.
-            - "model": (string) The primary model number.
-            - "maker": (string) The manufacturer's name.
-            - "desc_vi": (string) The final, enriched, comma-separated list of technical specs.
-            - "name_en": (string) English translation of name_vi.
-            - "desc_en": (string) English translation of desc_vi.
-
-            **Text to process:**
+            **Input Text:**
             ---
             ${rawText}
             ---
-        `;
+
+            **Your Task:**
+            1.  Analyze the Input Text.
+            2.  Create a JSON object with the keys: "name_vi", "model", "maker", "desc_vi", "name_en", "desc_en".
+            3.  Follow these rules with ZERO exceptions:
+
+            **Rule #1: "model" is the Unique Identifier.**
+            - Find the single most specific model number or Part Number (P/N). This is the **only** thing that goes into the "model" field.
+            - *Example: If the text is "Tivi LG 43LF510T", the "model" is "43LF510T".*
+
+            **Rule #2: "name_vi" is the General Category.**
+            - This field MUST describe the general type of the product in Vietnamese.
+            - It **MUST NOT** contain the model number.
+            - It **MUST NOT** contain the maker's name.
+            - *Correct Example: For "Tivi LG 43LF510T", the "name_vi" is "Tivi 43 inch".*
+            - *INCORRECT Example: "Tivi LG 43LF510T".*
+
+            **Rule #3: "desc_vi" is for Technical Specs ONLY.**
+            - List all other technical specifications as a comma-separated string.
+            - It **MUST NOT** contain the model number.
+            - It **MUST NOT** contain the maker's name.
+            - It **MUST NOT** contain non-technical info like serial number, date, or country.
+            - If the text is sparse, use your knowledge to find more specs for the identified model, but only list the specs themselves.
+            - *Correct Example: "Full HD, 1920x1080, Tấm nền IPS, 50Hz, Cổng HDMI, Cổng USB".*
+
+            **Rule #4: Translate**
+            - Translate "name_vi" and "desc_vi" to create "name_en" and "desc_en".
+
+            Now, process the Input Text and provide only the JSON object.
         `;
 
         try {
