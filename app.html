@@ -53,30 +53,38 @@
         addMessage('Bước 3/3: AI đang phân tích và tra cứu...', 'ai');
         
         // --- PROMPT MỚI, SIÊU CHI TIẾT ---
-        const prompt = `
-            You are a precise data extraction assistant. From the following text, perform these tasks and return a single, clean JSON object.
+        const  const prompt = `
+            You are a highly intelligent technical assistant. Your task is to extract product information from a given text and enrich it with your knowledge base. Return a single, clean JSON object.
 
-            **Thought Process (Chain of Thought):**
-            1.  Read the entire text to understand the product.
-            2.  **Identify the primary Model Number.** This is the most unique identifier, often labeled P/N, MPN, or a specific code like "UL2586". This is my "model" field.
-            3.  **Identify the Manufacturer.** Look for names like "ZTE", "Hengtong", "HUAWEI", "VMC". This is my "maker" field.
-            4.  **Identify the general Product Type** in Vietnamese. This is my "name_vi" field. *Example: If the text contains "DDR4 RDIMM-32GB", the name_vi should be "RAM DDR4 32GB".*
-            5.  **Compile the Description.** Gather ALL other technical specifications (voltage, size, standards, temperature, features, etc.). **CRITICAL: EXCLUDE the model number and maker I already identified.** This detailed list is my "desc_vi" field.
-            6.  **Translate.** Translate only "name_vi" and "desc_vi" to English for "name_en" and "desc_en".
-            7.  Construct the final JSON.
-
-            **Extraction Rules & JSON Schema:**
-            - **name_vi**: (string) The Vietnamese product name. *Bad example: "Dây dẫn điện UL25862X16rnm2(2x 6AWG)". Good example: "Dây dẫn điện".*
-            - **model**: (string) The single, primary model number or P/N. *Bad example: "UL25862X16rnm2(2x 6AWG)". Good example: "UL2586".*
-            - **maker**: (string) The manufacturer's name. *Example: "Hengtong".*
-            - **desc_vi**: (string) A comma-separated list of ALL other technical specs. **MUST NOT contain the model number or maker.**
-            - **name_en**: (string) English translation of name_vi.
-            - **desc_en**: (string) English translation of desc_vi.
+            **Chain of Thought Process:**
+            1.  **Extract Primary Info:** Read the user's text to identify the "name_vi" (Vietnamese product type), "model" (the most specific model number), and "maker".
+            2.  **Extract Specs from Text:** Find all technical specifications directly mentioned in the user's text.
+            3.  **Knowledge Lookup & Enrichment (CRITICAL STEP):**
+                - Use the identified "model" and "maker" to search your internal knowledge base (trained on the internet).
+                - Find additional key technical specifications for this model that are not in the user's text.
+                - *Example: If the model is "ThinkCentre M70t" and the text only mentions the CPU, you should find and add information about RAM, Storage, Ports, etc.*
+            4.  **Compile Final Description:**
+                - Combine the specs from the user's text AND the specs you found from your knowledge lookup.
+                - Create a detailed, comma-separated string for the "desc_vi" field.
+                - **CRITICAL RULES:**
+                    - The description **MUST NOT** contain the model number or maker.
+                    - The description **MUST NOT** contain non-technical info like Serial Number, Date, or Origin.
+                    - The description **MUST NOT** contain sentences like "For full specifications, please refer to...". It must contain the actual specifications.
+            5.  **Translate:** Translate only "name_vi" and "desc_vi" to English.
+            
+            **JSON Schema to return:**
+            - "name_vi": (string) Vietnamese product name.
+            - "model": (string) The primary model number.
+            - "maker": (string) The manufacturer's name.
+            - "desc_vi": (string) The final, enriched, comma-separated list of technical specs.
+            - "name_en": (string) English translation of name_vi.
+            - "desc_en": (string) English translation of desc_vi.
 
             **Text to process:**
             ---
             ${rawText}
             ---
+        `;
         `;
 
         try {
