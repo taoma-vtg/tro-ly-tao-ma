@@ -3,57 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trợ Lý AI Di Động (V20)</title>
+    <title>Trợ Lý AI Di Động (V21)</title>
+    <!-- CSS giữ nguyên -->
     <style>
-        /* CSS giữ nguyên như các phiên bản trước */
-        :root { --primary-color: #007bff; --light-gray: #f0f2f5; --dark-text: #1a253c; }
-        * { box-sizing: border-box; }
-        body, html { height: 100%; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--light-gray); }
-        .app-container { width: 100%; height: 100%; margin: auto; background: #fff; display: flex; flex-direction: column; }
-        .app-header { background: var(--primary-color); color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-shrink: 0; }
-        .app-header h1 { margin: 0; font-size: 1.2em; }
-        .chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .message { max-width: 85%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; word-wrap: break-word; }
-        .user-message { background-color: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .ai-message { background-color: #e9ecef; color: #343a40; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .ai-message table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; background-color: white; }
-        .ai-message th, .ai-message td { border: 1px solid #dee2e6; padding: 6px; text-align: left; }
-        .chat-input-area { border-top: 1px solid #dee2e6; padding: 10px; display: flex; gap: 10px; align-items: center; background: #fff; flex-shrink: 0; }
-        .chat-btn { background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 1.5em; cursor: pointer; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
-        .camera-btn { background: #6c757d; }
-        #user-input { flex-grow: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; resize: none; font-size: 1em; }
-        #api-key-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        #api-key-popup { background: white; padding: 25px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; }
+        :root { --primary-color: #007bff; --light-gray: #f0f2f5; --dark-text: #1a253c; } * { box-sizing: border-box; } body, html { height: 100%; margin: 0; padding: 0; } body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--light-gray); } .app-container { width: 100%; height: 100%; margin: auto; background: #fff; display: flex; flex-direction: column; } .app-header { background: var(--primary-color); color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-shrink: 0; } .app-header h1 { margin: 0; font-size: 1.2em; } .chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; } .message { max-width: 85%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; word-wrap: break-word; } .user-message { background-color: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 4px; } .ai-message { background-color: #e9ecef; color: #343a40; align-self: flex-start; border-bottom-left-radius: 4px; } .ai-message table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; background-color: white; } .ai-message th, .ai-message td { border: 1px solid #dee2e6; padding: 6px; text-align: left; } .chat-input-area { border-top: 1px solid #dee2e6; padding: 10px; display: flex; gap: 10px; align-items: center; background: #fff; flex-shrink: 0; } .chat-btn { background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 1.5em; cursor: pointer; flex-shrink: 0; display: flex; justify-content: center; align-items: center; } .camera-btn { background: #6c757d; } #user-input { flex-grow: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; resize: none; font-size: 1em; } #api-key-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; } #api-key-popup { background: white; padding: 25px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; }
     </style>
 </head>
 <body>
-
-<div class="app-container">
-    <div class="app-header"><h1>Trợ Lý Tạo Mã AI</h1></div>
-    <div class="chat-messages" id="chat-messages">
-        <div class="message ai-message">Xin chào! Nhấn nút 📷 để chụp ảnh hoặc chọn ảnh từ album, hoặc dán văn bản vào ô chat.</div>
-    </div>
-    <div class="chat-input-area">
-        <input type="file" id="camera-input" accept="image/*" style="display:none;">
-        <button id="camera-btn" class="chat-btn camera-btn" title="Chụp hoặc chọn ảnh">📷</button>
-        <textarea id="user-input" placeholder="Dán văn bản..." rows="1"></textarea>
-        <button id="send-btn" class="chat-btn" title="Gửi">➤</button>
-    </div>
-</div>
-
-<!-- Popup nhập API Key (giữ nguyên) -->
-<div id="api-key-modal">
-    <div id="api-key-popup">
-        <h2>Thiết Lập API Key</h2>
-        <p>Vui lòng nhập Google AI API Key của bạn để bắt đầu.</p>
-        <input type="password" id="api-key-input" placeholder="Dán API Key vào đây">
-        <button onclick="saveApiKey()">Lưu và Sử Dụng</button>
-    </div>
-</div>
+    <!-- HTML giữ nguyên -->
+    <div class="app-container"><div class="app-header"><h1>Trợ Lý Tạo Mã AI</h1></div><div class="chat-messages" id="chat-messages"><div class="message ai-message">Xin chào! Nhấn nút 📷 để chụp ảnh hoặc chọn ảnh từ album, hoặc dán văn bản vào ô chat.</div></div><div class="chat-input-area"><input type="file" id="camera-input" accept="image/*" style="display:none;"><button id="camera-btn" class="chat-btn camera-btn" title="Chụp hoặc chọn ảnh">📷</button><textarea id="user-input" placeholder="Dán văn bản..." rows="1"></textarea><button id="send-btn" class="chat-btn" title="Gửi">➤</button></div></div><div id="api-key-modal"><div id="api-key-popup"><h2>Thiết Lập API Key</h2><p>Vui lòng nhập Google AI API Key của bạn để bắt đầu.</p><input type="password" id="api-key-input" placeholder="Dán API Key vào đây"><button onclick="saveApiKey()">Lưu và Sử Dụng</button></div></div>
 
 <script>
-    // Toàn bộ JS từ V19, chỉ thay đổi prompt và hàm addMessage
+    // JS giữ nguyên, chỉ thay đổi prompt trong hàm callAI
     const apiKeyModal = document.getElementById('api-key-modal');
     const apiKeyInput = document.getElementById('api-key-input');
     const chatMessages = document.getElementById('chat-messages');
@@ -85,47 +46,32 @@
             .catch(error => { if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild); addMessage(`Lỗi OCR: ${error.message}`, 'ai'); });
         });
     });
-    function resizeImage(file, maxSizeInKB, callback) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const img = new Image();
-            img.onload = () => {
-                const MAX_WIDTH = 1280; const MAX_HEIGHT = 1280;
-                let width = img.width; let height = img.height;
-                if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-                const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                let quality = 0.9;
-                const checkSizeAndCallback = () => { canvas.toBlob((blob) => { if (blob.size / 1024 > maxSizeInKB && quality > 0.1) { quality -= 0.1; checkSizeAndCallback(); } else { callback(blob); } }, 'image/jpeg', quality); };
-                checkSizeAndCallback();
-            };
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-    
+    function resizeImage(file, maxSizeInKB, callback) { /* Giữ nguyên */ }
+
     async function callAI(rawText) {
         const apiKey = localStorage.getItem('googleApiKey_mobile'); if (!apiKey) {addMessage('Lỗi: Không tìm thấy API Key.', 'ai'); return;}
-        addMessage('Bước 3/3: AI đang suy nghĩ và tra cứu...', 'ai');
+        addMessage('Bước 3/3: AI đang phân tích và tra cứu...', 'ai');
         
-        // --- PROMPT MỚI, THÔNG MINH HƠN ---
+        // --- PROMPT MỚI, SIÊU CHI TIẾT ---
         const prompt = `
-            You are an expert technical specification assistant. From the following text, perform these tasks and return a single, clean JSON object.
+            You are a precise data extraction assistant. From the following text, perform these tasks and return a single, clean JSON object.
 
-            **TASK 1: Extract & Enrich**
-            - Extract information into these keys: "name_vi", "model", "maker".
-            - For the "desc_vi" key:
-                1. First, extract ALL relevant technical specs from the provided text.
-                2. Second, using the extracted 'model' number, use your internal knowledge (trained on the internet) to find and ADD more technical specifications for that model if available.
-                3. Combine all specs into a single, detailed, comma-separated string.
-            
-            **CRITICAL RULES for "desc_vi":**
-            - **DO NOT** include the model number itself.
-            - **DO NOT** include non-technical info like Serial Number, Manufacturing Date, or Country of Origin.
-            - **FOCUS ON** technical specs like: Voltage, Power (W), Resolution, Ports, Standards (UL, VW-1), etc.
+            **Thought Process (Chain of Thought):**
+            1.  Read the entire text to understand the product.
+            2.  **Identify the primary Model Number.** This is the most unique identifier, often labeled P/N, MPN, or a specific code like "UL2586". This is my "model" field.
+            3.  **Identify the Manufacturer.** Look for names like "ZTE", "Hengtong", "HUAWEI", "VMC". This is my "maker" field.
+            4.  **Identify the general Product Type** in Vietnamese. This is my "name_vi" field. *Example: If the text contains "DDR4 RDIMM-32GB", the name_vi should be "RAM DDR4 32GB".*
+            5.  **Compile the Description.** Gather ALL other technical specifications (voltage, size, standards, temperature, features, etc.). **CRITICAL: EXCLUDE the model number and maker I already identified.** This detailed list is my "desc_vi" field.
+            6.  **Translate.** Translate only "name_vi" and "desc_vi" to English for "name_en" and "desc_en".
+            7.  Construct the final JSON.
 
-            **TASK 2: Translate**
-            - Translate ONLY the "name_vi" and "desc_vi" values into English for the "name_en" and "desc_en" keys.
+            **Extraction Rules & JSON Schema:**
+            - **name_vi**: (string) The Vietnamese product name. *Bad example: "Dây dẫn điện UL25862X16rnm2(2x 6AWG)". Good example: "Dây dẫn điện".*
+            - **model**: (string) The single, primary model number or P/N. *Bad example: "UL25862X16rnm2(2x 6AWG)". Good example: "UL2586".*
+            - **maker**: (string) The manufacturer's name. *Example: "Hengtong".*
+            - **desc_vi**: (string) A comma-separated list of ALL other technical specs. **MUST NOT contain the model number or maker.**
+            - **name_en**: (string) English translation of name_vi.
+            - **desc_en**: (string) English translation of desc_vi.
 
             **Text to process:**
             ---
@@ -148,25 +94,9 @@
         }
     }
     
-    // --- HÀM ADD MESSAGE ĐÃ SỬA LỖI ---
-    function addMessage(content, type) {
-        const messageDiv = document.createElement('div'); messageDiv.className = `message ${type}-message`;
-        if (type === 'ai' && typeof content === 'object') {
-            const name_vi = content.name_vi || 'N/A';
-            const name_en = content.name_en || 'N/A';
-            const model = content.model || 'N/A';
-            const maker = content.maker || 'N/A';
-            const desc_vi = content.desc_vi || 'N/A';
-            const desc_en = content.desc_en || 'N/A';
-
-            // Tạo mã với tên có khoảng trắng, chỉ dùng gạch dưới để nối 4 thành phần
-            const code_vi = `${name_vi}_${model}_${maker}_${desc_vi}`;
-            const code_en = `${name_en}_${model}_${maker}_${desc_en}`;
-            
-            messageDiv.innerHTML = `<p><b>Kết quả từ AI:</b></p><table><tr><th>Tiếng Việt</th><th>English</th></tr><tr><td><b>Tên:</b> ${name_vi}</td><td><b>Name:</b> ${name_en}</td></tr><tr><td><b>Model:</b> ${model}</td><td><b>Model:</b> ${model}</td></tr><tr><td><b>NSX:</b> ${maker}</td><td><b>Maker:</b> ${maker}</td></tr><tr><td><b>Mô tả:</b> ${desc_vi}</td><td><b>Description:</b> ${desc_en}</td></tr></table><p style="font-size:0.9em; margin-top:10px;"><b>Mã Tiếng Việt:</b><br>${code_vi}</p><p style="font-size:0.9em;"><b>English Code:</b><br>${code_en}</p>`;
-        } else { messageDiv.innerText = content; }
-        chatMessages.appendChild(messageDiv); chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+    // --- CÁC HÀM CÒN LẠI GIỮ NGUYÊN ---
+    function resizeImage(file, maxSizeInKB, callback) {const reader = new FileReader(); reader.onload = (event) => {const img = new Image(); img.onload = () => {const MAX_WIDTH = 1280; const MAX_HEIGHT = 1280; let width = img.width; let height = img.height; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); let quality = 0.9; const checkSizeAndCallback = () => { canvas.toBlob((blob) => { if (blob.size / 1024 > maxSizeInKB && quality > 0.1) { quality -= 0.1; checkSizeAndCallback(); } else { callback(blob); } }, 'image/jpeg', quality); }; checkSizeAndCallback(); }; img.src = event.target.result; }; reader.readAsDataURL(file);}
+    function addMessage(content, type) {const messageDiv = document.createElement('div'); messageDiv.className = `message ${type}-message`; if (type === 'ai' && typeof content === 'object') {const name_vi = content.name_vi || 'N/A'; const name_en = content.name_en || 'N/A'; const model = content.model || 'N/A'; const maker = content.maker || 'N/A'; const desc_vi = content.desc_vi || 'N/A'; const desc_en = content.desc_en || 'N/A'; const code_vi = `${name_vi.replace(/\s+/g,' ')}_${model}_${maker}_${desc_vi}`; const code_en = `${name_en.replace(/\s+/g,' ')}_${model}_${maker}_${desc_en}`; messageDiv.innerHTML = `<p><b>Kết quả từ AI:</b></p><table><tr><th>Tiếng Việt</th><th>English</th></tr><tr><td><b>Tên:</b> ${name_vi}</td><td><b>Name:</b> ${name_en}</td></tr><tr><td><b>Model:</b> ${model}</td><td><b>Model:</b> ${model}</td></tr><tr><td><b>NSX:</b> ${maker}</td><td><b>Maker:</b> ${maker}</td></tr><tr><td><b>Mô tả:</b> ${desc_vi}</td><td><b>Description:</b> ${desc_en}</td></tr></table><p style="font-size:0.9em; margin-top:10px;"><b>Mã Tiếng Việt:</b><br>${code_vi}</p><p style="font-size:0.9em;"><b>English Code:</b><br>${code_en}</p>`;} else { messageDiv.innerText = content; } chatMessages.appendChild(messageDiv); chatMessages.scrollTop = chatMessages.scrollHeight;}
 </script>
 </body>
 </html>
