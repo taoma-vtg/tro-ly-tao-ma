@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trợ Lý AI Di Động</title>
+    <style>
+        :root { --primary-color: #007bff; --light-gray: #f0f2f5; --dark-text: #1a253c; }
+        * { box-sizing: border-box; }
+        body, html { height: 100%; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--light-gray); }
+        .app-container { width: 100%; height: 100%; margin: auto; background: #fff; display: flex; flex-direction: column; }
+        .app-header { background: var(--primary-color); color: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; flex-shrink: 0; }
+        .app-header h1 { margin: 0; font-size: 1.2em; }
+        .chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { max-width: 85%; padding: 10px 15px; border-radius: 18px; line-height: 1.4; word-wrap: break-word; }
+        .user-message { background-color: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai-message { background-color: #e9ecef; color: #343a40; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .ai-message table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; background-color: white; }
+        .ai-message th, .ai-message td { border: 1px solid #dee2e6; padding: 6px; text-align: left; }
+        .chat-input-area { border-top: 1px solid #dee2e6; padding: 10px; display: flex; gap: 10px; align-items: center; background: #fff; flex-shrink: 0; }
+        .chat-btn { background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 1.5em; cursor: pointer; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+        .camera-btn { background: #6c757d; }
+        #user-input { flex-grow: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; resize: none; font-size: 1em; }
+        #api-key-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        #api-key-popup { background: white; padding: 25px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; }
+        #api-key-popup input { width: 90%; padding: 10px; margin-top: 10px; margin-bottom: 20px; }
+        #api-key-popup button { width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="app-header"><h1>Trợ Lý Tạo Mã AI</h1></div>
+    <div class="chat-messages" id="chat-messages">
+        <div class="message ai-message">Xin chào! Nhấn nút 📷 để chụp ảnh, hoặc dán văn bản vào ô chat.</div>
+    </div>
+    <div class="chat-input-area">
+        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
+        <button id="camera-btn" class="chat-btn camera-btn" title="Chụp ảnh">📷</button>
+        <textarea id="user-input" placeholder="Dán văn bản..." rows="1"></textarea>
+        <button id="send-btn" class="chat-btn" title="Gửi">➤</button>
+    </div>
+</div>
+
+<div id="api-key-modal">
+    <div id="api-key-popup">
+        <h2>Thiết Lập API Key</h2>
+        <p>Vui lòng nhập Google AI API Key của bạn để bắt đầu.</p>
+        <input type="password" id="api-key-input" placeholder="Dán API Key vào đây">
+        <button onclick="saveApiKey()">Lưu và Sử Dụng</button>
+    </div>
+</div>
+
+<script>
+    const apiKeyModal = document.getElementById('api-key-modal');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const cameraBtn = document.getElementById('camera-btn');
+    const cameraInput = document.getElementById('camera-input');
+    
+    const ocrApiKey = 'K87379629688957'; // Key OCR miễn phí, ổn định
+
+    window.addEventListener('load', () => {
+        if (!localStorage.getItem('googleApiKey_mobile')) {
+            apiKeyModal.style.display = 'flex';
+        }
+    });
+
+    function saveApiKey() {
+        const key = apiKeyInput.value.trim();
+        if (key) {
+            localStorage.setItem('googleApiKey_mobile', key);
+            apiKeyModal.style.display = 'none';
+        } else {
+            alert('Vui lòng nhập API Key hợp lệ.');
+        }
+    }
+
+    sendBtn.addEventListener('click', () => {
+        const userText = userInput.value.trim();
+        if (!userText) return;
+        addMessage(`Đang xử lý văn bản...`, 'user');
+        userInput.value = '';
+        callAI(userText);
+    });
+
+    cameraBtn.addEventListener('click', () => cameraInput.click());
+
+    cameraInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        addMessage(`Đang xử lý ảnh chụp...`, 'user');
+        addMessage('Bước 1/2: Đang đọc chữ từ ảnh (OCR)...', 'ai');
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('apikey', ocrApiKey);
+        formData.append('language', 'eng');
+
+        fetch('https://api.ocr.space/parse/image', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(ocrData => {
+            chatMessages.removeChild(chatMessages.lastChild);
+            if (ocrData.IsErroredOnProcessing || !ocrData.ParsedResults || ocrData.ParsedResults.length === 0) {
+                throw new Error(ocrData.ErrorMessage?.[0] || 'OCR không nhận dạng được chữ. Vui lòng chụp lại ảnh rõ hơn.');
+            }
+            const rawText = ocrData.ParsedResults[0].ParsedText;
+            callAI(rawText);
+        })
+        .catch(error => {
+            if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild);
+            addMessage(`Lỗi OCR: ${error.message}`, 'ai');
+        });
+    });
+
+    async function callAI(rawText) {
+        const apiKey = localStorage.getItem('googleApiKey_mobile');
+        if (!apiKey) {
+            addMessage('Lỗi: Không tìm thấy API Key. Vui lòng tải lại trang.', 'ai');
+            return;
+        }
+
+        addMessage('Bước 2/2: AI đang suy nghĩ...', 'ai');
+        
+        const prompt = `From the following unstructured text, perform these tasks and return a single, clean JSON object:
+            1. Extract the information into these exact keys: "name_vi", "model", "maker", "desc_vi".
+            2. IMPORTANT: Keep the values concise and informative as requested below.
+               - "name_vi": Summarize the main product name in Vietnamese. E.g., "Module quang", "Cáp nguồn".
+               - "model": Find the most important number, prioritize P/N or a clear model name.
+               - "maker": Identify the manufacturer. E.g., "ZTE", "Hengtong".
+               - "desc_vi": CRITICAL: Combine ALL relevant technical specs into a detailed, comma-separated string. DO NOT summarize. E.g., "10G/1310nm SM, 1.4km", "600V, 105°C, AWM, VW-1".
+            3. Translate "name_vi" and "desc_vi" into English for "name_en" and "desc_en".
+            4. Create "code_vi" and "code_en" by joining the respective fields (name, model, maker, description) with underscores.
+            Unstructured Text:
+            ---
+            ${rawText}
+            ---`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Lỗi từ AI API: ${errorData.error.message}`);
+            }
+            
+            const data = await response.json();
+            const aiResponseText = data.candidates[0].content.parts[0].text;
+            const jsonString = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const parsedData = JSON.parse(jsonString);
+
+            chatMessages.removeChild(chatMessages.lastChild);
+            addMessage(parsedData, 'ai');
+
+        } catch (error) {
+            chatMessages.removeChild(chatMessages.lastChild);
+            addMessage(`Đã xảy ra lỗi: ${error.message}`, 'ai');
+        }
+    }
+    
+    function addMessage(content, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}-message`;
+        
+        if (type === 'ai' && typeof content === 'object') {
+            const code_vi = `${(content.name_vi||'').replace(/\s+/g,'_')}_${content.model}_${content.maker}_${content.desc_vi}`;
+            const code_en = `${(content.name_en||'').replace(/\s+/g,'_')}_${content.model}_${content.maker}_${content.desc_en}`;
+            
+            let tableHTML = `
+                <p><b>Kết quả từ AI:</b></p>
+                <table>
+                    <tr><th>Tiếng Việt</th><th>English</th></tr>
+                    <tr><td><b>Tên:</b> ${content.name_vi}</td><td><b>Name:</b> ${content.name_en}</td></tr>
+                    <tr><td><b>Model:</b> ${content.model}</td><td><b>Model:</b> ${content.model}</td></tr>
+                    <tr><td><b>NSX:</b> ${content.maker}</td><td><b>Maker:</b> ${content.maker}</td></tr>
+                    <tr><td><b>Mô tả:</b> ${content.desc_vi}</td><td><b>Description:</b> ${content.desc_en}</td></tr>
+                </table>
+                <p style="font-size:0.9em; margin-top:10px;"><b>Mã Tiếng Việt:</b><br>${code_vi}</p>
+                <p style="font-size:0.9em;"><b>English Code:</b><br>${code_en}</p>
+            `;
+            messageDiv.innerHTML = tableHTML;
+        } else {
+            messageDiv.innerText = content;
+        }
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+</script>
+</body>
+</html>
