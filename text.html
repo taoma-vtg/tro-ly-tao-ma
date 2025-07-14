@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>OCR từ Ảnh & Camera</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; background: #f2f2f2; }
+    h1 { color: #222; }
+    video, canvas, img { width: 100%; max-width: 500px; margin-top: 1rem; border: 1px solid #ccc; }
+    textarea { width: 100%; height: 180px; margin-top: 1rem; padding: 1rem; font-size: 1rem; }
+    button { margin-top: 1rem; padding: 0.75rem 1.5rem; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📷 OCR Text Extractor từ Ảnh & Camera</h1>
+  <input type="file" accept="image/*" id="fileInput"><br>
+  <img id="imagePreview" alt="Ảnh đã chọn"><br>
+
+  <button onclick="startCamera()">📸 Bật Camera</button>
+  <video id="video" autoplay playsinline></video><br>
+  <button onclick="capturePhoto()">📸 Chụp & OCR</button>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <textarea id="ocrResult" placeholder="Văn bản OCR sẽ hiện ở đây..."></textarea>
+  <button onclick="copyText()">📋 Copy văn bản</button>
+
+  <script src="https://unpkg.com/tesseract.js@v5.0.1/dist/tesseract.min.js"></script>
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const imagePreview = document.getElementById("imagePreview");
+    const ocrResult = document.getElementById("ocrResult");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        imagePreview.src = reader.result;
+        const worker = await Tesseract.createWorker("eng+vie", 1);
+        const { data } = await worker.recognize(reader.result);
+        ocrResult.value = data.text;
+        await worker.terminate();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    }
+
+    async function capturePhoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      const imageDataUrl = canvas.toDataURL("image/png");
+      imagePreview.src = imageDataUrl;
+      const worker = await Tesseract.createWorker("eng+vie", 1);
+      const { data } = await worker.recognize(imageDataUrl);
+      ocrResult.value = data.text;
+      await worker.terminate();
+    }
+
+    function copyText() {
+      ocrResult.select();
+      document.execCommand("copy");
+      alert("✅ Đã copy văn bản vào clipboard!");
+    }
+  </script>
+</body>
+</html>
