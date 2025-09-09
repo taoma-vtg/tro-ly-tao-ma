@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Trợ Lý AI Tạo Mã (V21 - Tự Động)</title>
+    <title>Trợ Lý AI Tạo Mã / AI Code Assistant (V22)</title>
     <style>
         :root { --primary-color: #007bff; --light-gray: #f0f2f5; --dark-text: #1a253c; }
         * { box-sizing: border-box; }
@@ -29,24 +29,24 @@
 <body>
 
 <div class="app-container">
-    <div class="app-header"><h1>Trợ Lý Tạo Mã AI</h1></div>
+    <div class="app-header"><h1>Trợ Lý Tạo Mã AI / AI Code Assistant</h1></div>
     <div class="chat-messages" id="chat-messages">
-        <div class="message ai-message">Xin chào! Nhấn nút 📷 để chụp hoặc chọn ảnh, hoặc dán văn bản vào ô chat.</div>
+        <div class="message ai-message">Xin chào! / Hello! <br>Nhấn nút 📷 để chụp hoặc chọn ảnh, hoặc dán văn bản vào ô chat. <br>Tap 📷 to take/select a photo, or paste text in the chat box.</div>
     </div>
     <div class="chat-input-area">
         <input type="file" id="camera-input" accept="image/*" style="display:none;">
-        <button id="camera-btn" class="chat-btn camera-btn" title="Chụp hoặc chọn ảnh">📷</button>
-        <textarea id="user-input" placeholder="Dán văn bản..." rows="1"></textarea>
-        <button id="send-btn" class="chat-btn" title="Gửi">➤</button>
+        <button id="camera-btn" class="chat-btn camera-btn" title="Chụp hoặc chọn ảnh / Take or select a photo">📷</button>
+        <textarea id="user-input" placeholder="Dán văn bản... / Paste text..." rows="1"></textarea>
+        <button id="send-btn" class="chat-btn" title="Gửi / Send">➤</button>
     </div>
 </div>
 
 <div id="api-key-modal">
     <div id="api-key-popup">
-        <h2>Thiết Lập API Key</h2>
-        <p>Vui lòng nhập Google AI API Key của bạn để bắt đầu.</p>
-        <input type="password" id="api-key-input" placeholder="Dán API Key vào đây">
-        <button onclick="saveApiKey()">Lưu và Sử Dụng</button>
+        <h2>Thiết Lập API Key / API Key Setup</h2>
+        <p>Vui lòng nhập Google AI API Key của bạn để bắt đầu. <br>Please enter your Google AI API Key to begin.</p>
+        <input type="password" id="api-key-input" placeholder="Dán API Key vào đây / Paste API Key here">
+        <button onclick="saveApiKey()">Lưu và Sử Dụng / Save and Start</button>
     </div>
 </div>
 
@@ -61,33 +61,33 @@
     const ocrApiKey = 'K87379629688957'; 
 
     window.addEventListener('load', () => { if (!localStorage.getItem('googleApiKey_mobile_v21')) { apiKeyModal.style.display = 'flex'; } });
-    function saveApiKey() { const key = apiKeyInput.value.trim(); if (key) { localStorage.setItem('googleApiKey_mobile_v21', key); apiKeyModal.style.display = 'none'; } else { alert('Vui lòng nhập API Key hợp lệ.'); } }
-    sendBtn.addEventListener('click', () => { const userText = userInput.value.trim(); if (!userText) return; addMessage(`Đang xử lý văn bản...`, 'user'); userInput.value = ''; callAI(userText); });
+    function saveApiKey() { const key = apiKeyInput.value.trim(); if (key) { localStorage.setItem('googleApiKey_mobile_v21', key); apiKeyModal.style.display = 'none'; } else { alert('Vui lòng nhập API Key hợp lệ. / Please enter a valid API Key.'); } }
+    sendBtn.addEventListener('click', () => { const userText = userInput.value.trim(); if (!userText) return; addMessage(`Đang xử lý văn bản... / Processing text...`, 'user'); userInput.value = ''; callAI(userText); });
     cameraBtn.addEventListener('click', () => cameraInput.click());
     cameraInput.addEventListener('change', (event) => {
         const file = event.target.files[0]; if (!file) return;
-        addMessage(`Đang xử lý ảnh...`, 'user');
-        addMessage('Bước 1/3: Đang nén ảnh...', 'ai');
+        addMessage(`Đang xử lý ảnh... / Processing image...`, 'user');
+        addMessage('Bước 1/3: Đang nén ảnh... / Step 1/3: Compressing image...', 'ai');
         resizeImage(file, 1024, (resizedBlob) => {
             if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild);
-            addMessage('Bước 2/3: Đang đọc chữ (OCR)...', 'ai');
+            addMessage('Bước 2/3: Đang đọc chữ (OCR)... / Step 2/3: Reading text (OCR)...', 'ai');
             const formData = new FormData(); formData.append('file', resizedBlob, file.name); formData.append('apikey', ocrApiKey); formData.append('language', 'eng');
             fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(ocrData => {
                 if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild);
-                if (ocrData.IsErroredOnProcessing || !ocrData.ParsedResults || ocrData.ParsedResults.length === 0) { throw new Error(ocrData.ErrorMessage?.[0] || 'OCR không nhận dạng được chữ.'); }
+                if (ocrData.IsErroredOnProcessing || !ocrData.ParsedResults || ocrData.ParsedResults.length === 0) { throw new Error(ocrData.ErrorMessage?.[0] || 'OCR could not recognize text.'); }
                 const rawText = ocrData.ParsedResults[0].ParsedText;
                 callAI(rawText);
             })
-            .catch(error => { if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild); addMessage(`Lỗi OCR: ${error.message}`, 'ai'); });
+            .catch(error => { if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild); addMessage(`Lỗi OCR / OCR Error: ${error.message}`, 'ai'); });
         });
     });
     function resizeImage(file, maxSizeInKB, callback) {const reader = new FileReader(); reader.onload = (event) => {const img = new Image(); img.onload = () => {const MAX_WIDTH = 1280; const MAX_HEIGHT = 1280; let width = img.width; let height = img.height; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); let quality = 0.9; const checkSizeAndCallback = () => { canvas.toBlob((blob) => { if (blob.size / 1024 > maxSizeInKB && quality > 0.1) { quality -= 0.1; checkSizeAndCallback(); } else { callback(blob); } }, 'image/jpeg', quality); }; checkSizeAndCallback(); }; img.src = event.target.result; }; reader.readAsDataURL(file);}
     
     async function callAI(rawText) {
-        const apiKey = localStorage.getItem('googleApiKey_mobile_v21'); if (!apiKey) {addMessage('Lỗi: Không tìm thấy API Key.', 'ai'); return;}
-        addMessage('Bước 3/3: AI đang phân tích và tra cứu...', 'ai');
+        const apiKey = localStorage.getItem('googleApiKey_mobile_v21'); if (!apiKey) {addMessage('Lỗi: Không tìm thấy API Key. / Error: API Key not found.', 'ai'); return;}
+        addMessage('Bước 3/3: AI đang phân tích... / Step 3/3: AI is analyzing...', 'ai');
         
         const prompt = `
             You are a precise data extraction bot. Your ONLY job is to populate a JSON object based on the rules below.
@@ -98,38 +98,20 @@
             ---
 
             Your Task:
-            1.  Analyze the Input Text.
-            2.  Create a JSON object with the keys: "name_vi", "model", "maker", "desc_vi", "name_en", "desc_en".
-            3.  Follow these rules with ZERO exceptions:
-
-            **Rule #1: "model" is the Unique Identifier.**
-            - Find the single most specific model number or Part Number (P/N). This is the **only** thing that goes into the "model" field.
-            - *Example: If the text is "Tivi LG 43LF510T", the "model" is "43LF510T".*
-
-            **Rule #2: "name_vi" is the General Category.**
-            - This field MUST describe the general type of the product in Vietnamese.
-            - It **MUST NOT** contain the model number.
-            - It **MUST NOT** contain the maker's name.
-            - *Correct Example: For "Tivi LG 43LF510T", the "name_vi" is "Tivi 43 inch".*
-            - *INCORRECT Example: "Tivi LG 43LF510T".*
-
-            **Rule #3: "desc_vi" is for Technical Specs ONLY.**
-            - List all other technical specifications as a comma-separated string.
-            - It **MUST NOT** contain the model number.
-            - It **MUST NOT** contain the maker's name.
-            - It **MUST NOT** contain non-technical info like serial number, date, or country.
-            - If the text is sparse, use your knowledge to find more specs for the identified model, but only list the specs themselves.
-            - *Correct Example: "Full HD, 1920x1080, Tấm nền IPS, 50Hz, Cổng HDMI, Cổng USB".*
-
-            **Rule #4: Translate**
-            - Translate "name_vi" and "desc_vi" to create "name_en" and "desc_en".
-
+            1. Analyze the Input Text.
+            2. Create a JSON object with the keys: "name_vi", "model", "maker", "desc_vi", "name_en", "desc_en".
+            3. Follow these rules with ZERO exceptions:
+                - "model": Find the single most specific model number or Part Number (P/N).
+                - "name_vi": Describe the general product type in Vietnamese. It MUST NOT contain the model number or maker. Correct example: "Tivi 43 inch".
+                - "maker": Identify the manufacturer.
+                - "desc_vi": List all other technical specifications as a comma-separated string. It MUST NOT contain the model number or maker. If the text is sparse, use your knowledge to find more specs for the model.
+                - Translate "name_vi" and "desc_vi" to create "name_en" and "desc_en".
             Now, process the Input Text and provide only the JSON object.
         `;
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-            if (!response.ok) { const errorData = await response.json(); throw new Error(`Lỗi từ AI API: ${errorData.error.message}`); }
+            if (!response.ok) { const errorData = await response.json(); throw new Error(`AI API Error: ${errorData.error.message}`); }
             const data = await response.json();
             const aiResponseText = data.candidates[0].content.parts[0].text;
             const jsonString = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -138,7 +120,7 @@
             addMessage(parsedData, 'ai');
         } catch (error) {
             if(chatMessages.lastChild.classList.contains('ai-message')) chatMessages.removeChild(chatMessages.lastChild);
-            addMessage(`Đã xảy ra lỗi: ${error.message}`, 'ai');
+            addMessage(`Đã xảy ra lỗi / An error occurred: ${error.message}`, 'ai');
         }
     }
     
@@ -151,11 +133,10 @@
             const maker = content.maker || 'N/A';
             const desc_vi = content.desc_vi || 'N/A';
             const desc_en = content.desc_en || 'N/A';
-
             const code_vi = `${name_vi.replace(/\s+/g, ' ')}_${model}_${maker}_${desc_vi}`;
             const code_en = `${name_en.replace(/\s+/g, ' ')}_${model}_${maker}_${desc_en}`;
             
-            messageDiv.innerHTML = `<p><b>Kết quả từ AI:</b></p><table><tr><th>Tiếng Việt</th><th>English</th></tr><tr><td><b>Tên:</b> ${name_vi}</td><td><b>Name:</b> ${name_en}</td></tr><tr><td><b>Model:</b> ${model}</td><td><b>Model:</b> ${model}</td></tr><tr><td><b>NSX:</b> ${maker}</td><td><b>Maker:</b> ${maker}</td></tr><tr><td><b>Mô tả:</b> ${desc_vi}</td><td><b>Description:</b> ${desc_en}</td></tr></table><p style="font-size:0.9em; margin-top:10px;"><b>Mã Tiếng Việt:</b><br>${code_vi}</p><p style="font-size:0.9em;"><b>English Code:</b><br>${code_en}</p>`;
+            messageDiv.innerHTML = `<p><b>Kết quả từ AI / Result from AI:</b></p><table><tr><th>Tiếng Việt</th><th>English</th></tr><tr><td><b>Tên/Name:</b> ${name_vi}</td><td><b>Model:</b> ${model}</td></tr><tr><td><b>NSX/Maker:</b> ${maker}</td><td><b>Mô tả/Desc:</b> ${desc_vi}</td></tr></table><p style="font-size:0.9em; margin-top:10px;"><b>Mã Tiếng Việt:</b><br>${code_vi}</p><p style="font-size:0.9em;"><b>English Code:</b><br>${code_en}</p>`;
         } else { messageDiv.innerText = content; }
         chatMessages.appendChild(messageDiv); chatMessages.scrollTop = chatMessages.scrollHeight;
     }
