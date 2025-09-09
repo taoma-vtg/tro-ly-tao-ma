@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Halotel OCR - Camera</title>
+  <link rel="icon" href="logo.png" />
+  <style>
+    body { font-family: sans-serif; background: #ff6600; color: #fff; text-align: center; padding: 1rem; }
+    input, button, video, canvas, textarea { margin: 10px; }
+    video, canvas { width: 90%%; max-width: 400px; border: 2px solid #fff; }
+    textarea { width: 90%%; height: 120px; }
+  </style>
+</head>
+<body>
+  <h1>📸 Halotel OCR</h1>
+  <p>📌 Ứng dụng nội bộ Halotel – nội dung OCR không được chia sẻ bên ngoài</p>
+
+  <button onclick="startCamera()">📷 Mở Camera</button>
+  <button onclick="captureImage()">📸 Chụp & OCR</button><br>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <br>
+
+  <textarea id="result" placeholder="Kết quả văn bản sẽ hiển thị ở đây..."></textarea><br>
+  <button onclick="copyText()">📋 Sao chép</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const result = document.getElementById('result');
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Không thể truy cập camera: " + err.message);
+      }
+    }
+
+    function captureImage() {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+
+      result.value = "⏳ Đang nhận diện...";
+      Tesseract.recognize(imageData, 'eng+vie', {
+        logger: m => console.log(m)
+      }).then(({ data: { text } }) => {
+        result.value = text;
+      });
+    }
+
+    function copyText() {
+      result.select();
+      document.execCommand("copy");
+      alert("✅ Đã sao chép văn bản!");
+    }
+  </script>
+</body>
+</html>
